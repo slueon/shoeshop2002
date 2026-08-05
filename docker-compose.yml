@@ -1,0 +1,37 @@
+# Không còn sử dụng thẻ version trong các chuẩn Compose hiện đại
+name: shoeshop-project
+
+services:
+  db:
+    image: mariadb:10.11
+    container_name: shoeshop_db
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: shoeshop
+      MARIADB_USER: shoeshop
+      MARIADB_PASSWORD: shoeshop
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      # Tự động import dữ liệu từ file sql có sẵn vào database
+      - ./shoe_shopdb.sql:/docker-entrypoint-initdb.d/init.sql
+
+  app:
+    build: .
+    container_name: shoeshop_app
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      # Ghi đè cấu hình trong application.properties để kết nối sang container 'db'
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/shoeshop?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: shoeshop
+      SPRING_DATASOURCE_PASSWORD: shoeshop
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+volumes:
+  db_data:
